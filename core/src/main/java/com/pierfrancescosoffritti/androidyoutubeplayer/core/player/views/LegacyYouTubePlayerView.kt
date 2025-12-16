@@ -12,7 +12,6 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.Ful
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.NetworkObserver
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.PlaybackResumer
 
 /**
@@ -29,8 +28,6 @@ internal class LegacyYouTubePlayerView(
   constructor(context: Context) : this(context, FakeWebViewYouTubeListener, null, 0)
 
   internal val webViewYouTubePlayer = WebViewYouTubePlayer(context, listener)
-
-  private val networkObserver = NetworkObserver(context.applicationContext)
   private val playbackResumer = PlaybackResumer()
 
   internal var isYouTubePlayerReady = false
@@ -66,19 +63,6 @@ internal class LegacyYouTubePlayerView(
         youTubePlayer.removeListener(this)
       }
     })
-
-    networkObserver.listeners.add(object : NetworkObserver.Listener {
-      override fun onNetworkAvailable() {
-        if (!isYouTubePlayerReady) {
-          initialize()
-        }
-        else {
-          playbackResumer.resume(webViewYouTubePlayer.youtubePlayer)
-        }
-      }
-
-      override fun onNetworkUnavailable() { }
-    })
   }
 
   /**
@@ -97,10 +81,6 @@ internal class LegacyYouTubePlayerView(
   ) {
     if (isYouTubePlayerReady) {
       throw IllegalStateException("This YouTubePlayerView has already been initialized.")
-    }
-
-    if (handleNetworkEvents) {
-      networkObserver.observeNetwork()
     }
 
     initialize = {
@@ -175,7 +155,6 @@ internal class LegacyYouTubePlayerView(
    * Call this method before destroying the host Fragment/Activity, or register this View as an observer of its host lifecycle
    */
   fun release() {
-    networkObserver.destroy()
     removeView(webViewYouTubePlayer)
     webViewYouTubePlayer.removeAllViews()
     webViewYouTubePlayer.destroy()
